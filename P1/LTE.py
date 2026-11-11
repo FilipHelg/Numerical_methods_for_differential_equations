@@ -1,4 +1,4 @@
-import IVP
+from IVP import IVP
 import numpy as np
 import scipy as sp
 import scipy.linalg as spl

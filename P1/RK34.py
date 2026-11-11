@@ -4,6 +4,7 @@ import scipy.linalg as spl
 import matplotlib.pyplot as plt
 from IVP import IVP
 from LTE import LTE
+from Evaluator import Evaluator
 from Solver import Solver
 
 class RK34(Solver): # gör för alla fyra ekvationer och lägg in viktning.
@@ -23,3 +24,5 @@ class RK34(Solver): # gör för alla fyra ekvationer och lägg in viktning.
         localerror = self.h/6 * (2*Y2 + Z3 - 2*Y3 - Y4) # local error för l_n+1 enligt (3)
         self.errest = np.linalg.norm(localerror)
         return un + self.h/6 * (Y1 + 2*Y2 + 2*Y3 + Y4) #beräknar u_n+1 genom metoderna anvisade i labben
+    
+
