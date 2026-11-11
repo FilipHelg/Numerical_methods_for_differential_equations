@@ -28,7 +28,7 @@ class Solver():
                 self.u = self.step(self.grid[x], self.u)
                 self.us[x+1] = self.u
         else:
-            self.h = (abs(self.ivp.T - self.ivp.t0) * (self.tol ** (1 / self.k)) / (100 * (1 + np.linalg.norm(self.ivp.f(self.ivp.t0, self.ivp.y0)))))
+            self.h = (abs(self.ivp.T - self.ivp.t0) * (self.tol ** (1 / self.k)) / (100 * (1 + np.linalg.norm(self.ivp.f(self.ivp.t0, self.ivp.y0))))) # given från uppgiftsbeskrinvingen
             self.grid = [self.ivp.t0] # måste göra listor som kan förlängas eftersom att vi inte vet antal steg när den är adaptiv
             self.us = [self.u.copy()] # initialvärdet (är samma som y0 eftersom den kopierades från y0 i __init__)
                                                                   

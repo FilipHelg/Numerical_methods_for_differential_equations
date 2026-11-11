@@ -26,3 +26,28 @@ class RK34(Solver): # gör för alla fyra ekvationer och lägg in viktning.
         return un + self.h/6 * (Y1 + 2*Y2 + 2*Y3 + Y4) #beräknar u_n+1 genom metoderna anvisade i labben
     
 
+
+###### test #####
+
+if __name__ == "__main__":
+    A = np.array([[0.0, 1.0], 
+                  [-1.0, 0.0]])
+    y0 = np.array([0.0, 1.0])
+    t0 = 0.0
+    periods = 5
+    T = 2 * np.pi * periods
+    
+    ivp = LTE(t0, T, y0, A)
+    
+    solver = RK34(ivp, N=100, tol=1e-5, adaptive=True)
+    solver.integrate()
+    
+    t_fine = np.linspace(t0, T, 500)
+    sin_exact = np.sin(t_fine)
+    
+    plt.plot(t_fine, sin_exact, label = "sin(t)")
+    plt.plot(solver.grid, solver.us[:, 0], 'o' , label='RK34', markersize = 5)
+    plt.title("RK34 vs Sin")
+    plt.xlabel("Tid")
+    plt.ylabel("Värde")
+    plt.show()

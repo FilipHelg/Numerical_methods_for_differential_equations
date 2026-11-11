@@ -54,10 +54,21 @@ class Solver():
             self.us = [self.u.copy()] # initialvärdet (är samma som y0 eftersom den kopierades från y0 i __init__)
                                                                   
             while self.grid[-1] < self.ivp.T: 
-                if self.grid[-1] + self.h > self.ivp.T:
-                    self.h = self.ivp.T - self.grid[-1] #säkerställer att vi inte räknar för ett värde större än T, anpassar sista steget.
+                if self.grid[-1] + self.h >= self.ivp.T:#säkerställer att vi inte räknar för ett värde större än T, anpassar sista steget.
+                    self.h = self.ivp.T - self.grid[-1] 
+                    new_t = self.ivp.T 
+                else:
+                    new_t = self.grid[-1] + self.h
                 
-                return "implementerar senare tack och godnatt"
+                self.u = self.step(self.grid[-1], self.u) # tar steg
+                self.grid.append(new_t)
+                self.us.append(self.u.copy())
+                
+                if new_t < self.ivp.T: # beräknar det nya steget som ska tas
+                    self.newstep()
+
+            self.grid = np.array(self.grid)
+            self.us = np.array(self.us) # konvertera till vektorer för hantering senare
         
     def step(tn, un):
             raise NotImplementedError
