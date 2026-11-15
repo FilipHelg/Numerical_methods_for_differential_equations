@@ -41,6 +41,25 @@ def main():
     print(sum(errs))
 
 
+# loglog of error
+def convergence():
+    problem = LTE(0, 10, np.array([1.0, 1.0]), np.array([[0, 1], [-1, 0]]))
+    Ns = 2**np.arange(3, 11)
+    hs = np.zeros(len(Ns))
+    errs = np.zeros(len(Ns))
+    for i, N in enumerate(Ns):
+        solver = RK4(problem, N)
+        solver.integrate()
+        hs[i] = solver.h
+        errs[i] = np.linalg.norm(solver.us[-1] - problem.exact(problem.T))
+    plt.loglog(hs, errs, label="RK4 error")
+    plt.loglog(hs, hs**4, '--', label="h^4")
+    plt.xlabel("h")
+    plt.ylabel("global error")
+    plt.legend()
+    plt.show()
+
 
 if __name__ == "__main__":
     main()
+    convergence()

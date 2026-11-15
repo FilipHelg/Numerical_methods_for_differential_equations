@@ -24,14 +24,14 @@ def main():
     y0 = np.array([1,1]) # Equilibrium at [d/c, b/a]. Solution and its period changes drastically with the initial condition.
     t0 = 0
     T = 120
-    N = 1000
-    tol = 1e-2 #choose 1e-6 for good result, or 1e-2 to see drift
+    N = 10000
+    tol = 1e-2 #choose 1e-6 for good result, or 1e-2 and lower N to see drift
 
     def H(y):
         return c*y[0] + b*y[1] - d*np.log(y[0]) - a*np.log(y[1])
 
     problem = LotkaVolterra(t0, T, y0, a, b, c, d)
-    solver = RK34(problem, N, tol)
+    solver = RK34(problem, N, tol, True)
 
     ts = np.linspace(t0, T, N + 1)
     us = np.zeros((N + 1, 2))
