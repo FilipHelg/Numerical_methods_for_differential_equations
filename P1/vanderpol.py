@@ -7,9 +7,11 @@ from LTE import LTE
 from Solver import Solver
 from RK34 import RK34
 from Evaluator import Evaluator
+from scipy.integrate import solve_ivp
+import time
 
 
-class vanderpol(IVP):
+class VanDerPol(IVP):
     def __init__(self, t0, T, y0, mu):
         super().__init__(t0, T, y0)
         self.mu = mu
@@ -18,10 +20,16 @@ class vanderpol(IVP):
         return np.array([y[1], self.mu * (1- y[0]**2) * y[1] - y[0]]) # van der pol ekvationen som given på sida 8
     
 
-if __name__ == "__main__":
+y0 = np.array([2 , 0])
+mus = [10, 15, 22, 33, 47, 68, 100, 150, 220, 330, 470, 650, 1000] # för uppgift 4.3, 4.4 & 4.5, RK34 slutar fungera ungefär vid mu > 600
+t0 = 0
+x = 4.1 # vilken uppgift som ska lösas, 4.6 ger jämförelse mellan RK34, RK45, och ScipyBDF
+
+
+if x == 4.1:
     mu = 100
     y0 = np.array([2 , 0])
-    vanderpolproblem = vanderpol(0, 2*mu, y0, mu)
+    vanderpolproblem = VanDerPol(0, 2*mu, y0, mu) # test
     
     solver = RK34(vanderpolproblem, N = 100, tol = 1e-6, adaptive= True)
     solver.integrate()
@@ -30,16 +38,18 @@ if __name__ == "__main__":
     plt.title("y2 över tid, mu=100, y0 = [2,0]")
     plt.xlabel("tid")
     plt.ylabel("y2")
-    plt.plot(solver.grid, solver.us[:, 1])
+    
+    plt.plot(solver.grid, solver.us[:, 1]) #ändra mellan 1&0 för att se y2 eller y1
     plt.show() 
     
-    plt.figure()
+    n = 5 #antalet 
+    plt.figure() # 4.1
     plt.xlabel("y1")
     plt.ylabel("y2")
-    for x in range(5):
+    for x in range(n): # n som alla hamnar på samma kurva.
         mu = 100
         y0 = np.array([(x+1)/5 , 0])
-        vanderpolproblem = vanderpol(0, 2*mu, y0, mu)
+        vanderpolproblem = VanDerPol(0, 2*mu, y0, mu)
             
         solver = RK34(vanderpolproblem, N = 100, tol = 1e-6, adaptive= True)
         solver.integrate()
@@ -49,7 +59,103 @@ if __name__ == "__main__":
     plt.title(f"y2 mot y1, mu = {mu}, y0 = {y0s}") # alla hamnar på samma slutna kurva
     plt.show()
 
+if x == 4.2:
+    plt.figure()
+    plt.semilogy (solver . grid [: -1] , np . diff (solver.grid )) #4.2
+    plt.title("Stepsizes over time")
+    plt.show()
     
+if x == 4.3:
+    steps_rk34 = []
+
+    for mu in mus:
+        T_stiff = 0.7 * mu
+        vdp_stiff = VanDerPol(t0, T_stiff, y0, mu)
+    
+        solver_rk34 = RK34(vdp_stiff, N=1, tol=1e-6, adaptive=True)
+        solver_rk34.integrate()
+        steps_rk34.append(len(solver_rk34.grid) - 1)
+
+    plt.loglog(mus, steps_rk34, label="RK34", marker='o')
+    plt.title("Total Steps vs. Stiffness Parameter (mu)")
+    plt.xlabel("Stiffness Parameter (mu)")
+    plt.ylabel("Number of Steps (N)")
+    plt.legend()
+    plt.show()
+
+if x == 4.4:
+    mus = [10, 15, 22, 33, 47, 68, 100, 150, 220, 330, 470, 680, 1000] # change size of mus to check whether larger mus take more time (it doesnt)
+    steps_rk34 = []
+    steps_bdf = []
+    start_time = time.perf_counter()
+    
+    for mu in mus:
+        T_stiff = 0.7 * mu
+        vdp_stiff = VanDerPol(t0, T_stiff, y0, mu)
+            
+        sol_bdf = solve_ivp(vdp_stiff.f, [0, T_stiff], y0, method='BDF', atol=1e-6, rtol=1e-6)
+        steps_bdf.append(len(sol_bdf.t) - 1)
+    end_time = time.perf_counter()
+    result = (end_time - start_time)
+    print(f"Total time was {result} seconds")
+    
+    plt.loglog(mus, steps_bdf, label="SciPy BDF", marker='s', color='orange')
+    plt.title("Task 4.4: SciPy BDF")
+    plt.xlabel("Stiffness Parameter (mu)")
+    plt.ylabel("Number of Steps (N)")
+    plt.legend()
+    plt.show()
+       
+if x == 4.5:
+    steps_rk45 = []
+    
+    for mu in mus:
+        T_stiff = 0.7 * mu
+        vdp_stiff = VanDerPol(t0, T_stiff, y0, mu)
+        
+        def scipy_f(t, y):
+            return vdp_stiff.f(t, y)
+            
+        sol_rk45 = solve_ivp(scipy_f, [0, T_stiff], y0, method='RK45', atol=1e-6, rtol=1e-6)
+        steps_rk45.append(len(sol_rk45.t) - 1)
+
+    plt.loglog(mus, steps_rk45, label="SciPy RK45", marker='^', color='green')
+    plt.title("Task 4.5: RK45")
+    plt.xlabel("Stiffness Parameter (mu)")
+    plt.ylabel("Number of Steps (N)")
+    plt.legend()
+    plt.show()
+
+if x == 4.6:
+    steps_rk34 = []
+    steps_bdf = []
+    steps_rk45 = []
+    
+    for mu in mus:
+        T_stiff = 0.7 * mu
+        vdp_stiff = VanDerPol(t0, T_stiff, y0, mu)
+    
+            
+        solver_rk34 = RK34(vdp_stiff.f, N=1, tol=1e-6, adaptive=True)
+        solver_rk34.integrate()
+        steps_rk34.append(len(solver_rk34.grid) - 1)
+        
+        sol_bdf = solve_ivp(scipy_f, [0, T_stiff], y0, method='BDF', atol=1e-6, rtol=1e-6)
+        steps_bdf.append(len(sol_bdf.t) - 1)
+        
+        sol_rk45 = solve_ivp(scipy_f, [0, T_stiff], y0, method='RK45', atol=1e-6, rtol=1e-6)
+        steps_rk45.append(len(sol_rk45.t) - 1)
+
+    # Plot total steps for each method in a collective graph
+    plt.loglog(mus, steps_rk34, label="Custom RK34")
+    plt.loglog(mus, steps_bdf, label="SciPy BDF")
+    plt.loglog(mus, steps_rk45, label="SciPy RK45")
+    
+    plt.title("Tasks 4.3, 4.4, & 4.5: Total Steps vs. Stiffness Parameter (mu)")
+    plt.xlabel("Stiffness Parameter (mu)")
+    plt.ylabel("Number of Steps (N)")
+    plt.legend()
+    plt.show()
     
     
     
