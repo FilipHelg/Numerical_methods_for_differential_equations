@@ -39,7 +39,7 @@ if __name__ == "__main__":
     
     ivp = LTE(t0, T, y0, A)
     
-    solver = RK34(ivp, N=50, tol=1e-5, adaptive=False)
+    solver = RK34(ivp, N=50, tol=1e-5, adaptive=True)
     solver.integrate()
     
     t_fine = np.linspace(t0, T, 500)

@@ -18,12 +18,13 @@ class VanDerPol(IVP):
         
     def f(self, t, y):
         return np.array([y[1], self.mu * (1- y[0]**2) * y[1] - y[0]]) # van der pol ekvationen som given på sida 8
-    
+
+
 
 y0 = np.array([2 , 0])
 mus = [10, 15, 22, 33, 47, 68, 100, 150, 220, 330, 470, 650, 1000] # för uppgift 4.3, 4.4 & 4.5, RK34 slutar fungera ungefär vid mu > 600
 t0 = 0
-x = 4.1 # vilken uppgift som ska lösas, 4.6 ger jämförelse mellan RK34, RK45, och ScipyBDF
+x = 4.6 # vilken uppgift som ska lösas, 4.6 ger jämförelse mellan RK34, RK45, och ScipyBDF
 
 
 if x == 4.1:
@@ -48,7 +49,7 @@ if x == 4.1:
     plt.ylabel("y2")
     for x in range(n): # n som alla hamnar på samma kurva.
         mu = 100
-        y0 = np.array([(x+1)/5 , 0])
+        y0 = np.array([(x+1)/5 , x*5])
         vanderpolproblem = VanDerPol(0, 2*mu, y0, mu)
             
         solver = RK34(vanderpolproblem, N = 100, tol = 1e-6, adaptive= True)
@@ -60,8 +61,15 @@ if x == 4.1:
     plt.show()
 
 if x == 4.2:
+    mu = 100
+    y0 = np.array([2 , 0])
+    vanderpolproblem = VanDerPol(0, 2*mu, y0, mu)
+    solver = RK34(vanderpolproblem, N = 100, tol = 1e-6, adaptive= True)
+    solver.integrate()
     plt.figure()
-    plt.semilogy (solver . grid [: -1] , np . diff (solver.grid )) #4.2
+    plt.xlabel("time")
+    plt.ylabel("stepsize")
+    plt.semilogy(solver.grid [: -1], np.diff(solver.grid)) #4.2
     plt.title("Stepsizes over time")
     plt.show()
     
@@ -72,21 +80,22 @@ if x == 4.3:
         T_stiff = 0.7 * mu
         vdp_stiff = VanDerPol(t0, T_stiff, y0, mu)
     
-        solver_rk34 = RK34(vdp_stiff, N=1, tol=1e-6, adaptive=True)
+        solver_rk34 = RK34(vdp_stiff, N=1, tol=1e-8, adaptive=True)
         solver_rk34.integrate()
         steps_rk34.append(len(solver_rk34.grid) - 1)
 
     plt.loglog(mus, steps_rk34, label="RK34", marker='o')
-    plt.title("Total Steps vs. Stiffness Parameter (mu)")
-    plt.xlabel("Stiffness Parameter (mu)")
-    plt.ylabel("Number of Steps (N)")
+    plt.title("Total steps vs Stiffness parameter (mu)")
+    plt.xlabel("Stiffness parameter (mu)")
+    plt.ylabel("Number of steps (N)")
     plt.legend()
     plt.show()
 
 if x == 4.4:
     mus = [10, 15, 22, 33, 47, 68, 100, 150, 220, 330, 470, 680, 1000] # change size of mus to check whether larger mus take more time (it doesnt)
-    steps_rk34 = []
+    musx10 = [100, 150, 220, 330, 470, 680, 1000, 1500, 2200, 3300, 4700, 6800, 10000]
     steps_bdf = []
+    steps_bdfx10 = []
     start_time = time.perf_counter()
     
     for mu in mus:
@@ -97,12 +106,23 @@ if x == 4.4:
         steps_bdf.append(len(sol_bdf.t) - 1)
     end_time = time.perf_counter()
     result = (end_time - start_time)
-    print(f"Total time was {result} seconds")
+    print(f"Total time was {result} seconds for the list: {mus}")
+    
+    start_time = time.perf_counter()
+    for mu in musx10:
+            T_stiff = 0.7 * mu
+            vdp_stiff = VanDerPol(t0, T_stiff, y0, mu)
+                
+            sol_bdfx10 = solve_ivp(vdp_stiff.f, [0, T_stiff], y0, method='BDF', atol=1e-6, rtol=1e-6)
+            steps_bdfx10.append(len(sol_bdf.t) - 1)
+    end_time = time.perf_counter()
+    result = (end_time - start_time)
+    print(f"Total time was {result} seconds for the list: {musx10}")
     
     plt.loglog(mus, steps_bdf, label="SciPy BDF", marker='s', color='orange')
-    plt.title("Task 4.4: SciPy BDF")
-    plt.xlabel("Stiffness Parameter (mu)")
-    plt.ylabel("Number of Steps (N)")
+    plt.title("Total steps vs Stiffness parameter (mu)")
+    plt.xlabel("Stiffness parameter (mu)")
+    plt.ylabel("Number of steps (N)")
     plt.legend()
     plt.show()
        
@@ -112,17 +132,14 @@ if x == 4.5:
     for mu in mus:
         T_stiff = 0.7 * mu
         vdp_stiff = VanDerPol(t0, T_stiff, y0, mu)
-        
-        def scipy_f(t, y):
-            return vdp_stiff.f(t, y)
-            
-        sol_rk45 = solve_ivp(scipy_f, [0, T_stiff], y0, method='RK45', atol=1e-6, rtol=1e-6)
+    
+        sol_rk45 = solve_ivp(vdp_stiff.f, [0, T_stiff], y0, method='RK45', atol=1e-6, rtol=1e-6)
         steps_rk45.append(len(sol_rk45.t) - 1)
 
     plt.loglog(mus, steps_rk45, label="SciPy RK45", marker='^', color='green')
-    plt.title("Task 4.5: RK45")
-    plt.xlabel("Stiffness Parameter (mu)")
-    plt.ylabel("Number of Steps (N)")
+    plt.title("Total steps vs stiffness parameter (mu)")
+    plt.xlabel("Stiffness parameter (mu)")
+    plt.ylabel("Number of steps (N)")
     plt.legend()
     plt.show()
 
@@ -136,14 +153,14 @@ if x == 4.6:
         vdp_stiff = VanDerPol(t0, T_stiff, y0, mu)
     
             
-        solver_rk34 = RK34(vdp_stiff.f, N=1, tol=1e-6, adaptive=True)
+        solver_rk34 = RK34(vdp_stiff, N=1, tol=1e-8, adaptive=True)
         solver_rk34.integrate()
         steps_rk34.append(len(solver_rk34.grid) - 1)
         
-        sol_bdf = solve_ivp(scipy_f, [0, T_stiff], y0, method='BDF', atol=1e-6, rtol=1e-6)
+        sol_bdf = solve_ivp(vdp_stiff.f, [0, T_stiff], y0, method='BDF', atol=1e-6, rtol=1e-6)
         steps_bdf.append(len(sol_bdf.t) - 1)
         
-        sol_rk45 = solve_ivp(scipy_f, [0, T_stiff], y0, method='RK45', atol=1e-6, rtol=1e-6)
+        sol_rk45 = solve_ivp(vdp_stiff.f, [0, T_stiff], y0, method='RK45', atol=1e-6, rtol=1e-6)
         steps_rk45.append(len(sol_rk45.t) - 1)
 
     # Plot total steps for each method in a collective graph
@@ -151,9 +168,9 @@ if x == 4.6:
     plt.loglog(mus, steps_bdf, label="SciPy BDF")
     plt.loglog(mus, steps_rk45, label="SciPy RK45")
     
-    plt.title("Tasks 4.3, 4.4, & 4.5: Total Steps vs. Stiffness Parameter (mu)")
-    plt.xlabel("Stiffness Parameter (mu)")
-    plt.ylabel("Number of Steps (N)")
+    plt.title("Metacomparison of total steps vs stiffness parameter")
+    plt.xlabel("Stiffness parameter (mu)")
+    plt.ylabel("Number of steps (N)")
     plt.legend()
     plt.show()
     

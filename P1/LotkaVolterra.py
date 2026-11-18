@@ -4,6 +4,7 @@ import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
 
+
 class LotkaVolterra(IVP):
     def __init__(self, t0, T, y0, a, b, c, d):
         super().__init__(t0, T, y0)
@@ -25,7 +26,7 @@ def main():
     t0 = 0
     T = 120
     N = 10000
-    tol = 1e-2 #choose 1e-6 for good result, or 1e-2 and lower N to see drift
+    tol = 1e-6 #choose 1e-6 for good result, or 1e-2 and lower N to see drift
 
     def H(y):
         return c*y[0] + b*y[1] - d*np.log(y[0]) - a*np.log(y[1])
